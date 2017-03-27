@@ -50,6 +50,14 @@ class GridFieldOrderableRows extends RequestHandler implements
 	protected $extraSortFields = null;
 
 	/**
+	 * Extra sort fields to apply after the sort field.
+	 *
+	 * @see setExtraSortFields()
+	 * @var string|array
+	 */
+	protected $extraAfterSortFields = null;
+
+	/**
 	 * The number of the column containing the reorder handles
 	 *
 	 * @see setReorderColumnNumber()
@@ -109,12 +117,30 @@ class GridFieldOrderableRows extends RequestHandler implements
 	}
 
 	/**
-	 * Sets extra sort fields to apply before the sort field.
+	 * Sets extra sort fields to apply after the sort field.
 	 *
 	 * @param string|array $fields
 	 * @return GridFieldOrderableRows $this
 	 */
 	public function setExtraSortFields($fields) {
+		$this->extraAfterSortFields = $fields;
+		return $this;
+	}
+
+	/**
+	 * @return string|array
+	 */
+	public function getAfterExtraSortFields() {
+		return $this->extraAfterSortFields;
+	}
+
+	/**
+	 * Sets extra sort fields to apply before the sort field.
+	 *
+	 * @param string|array $fields
+	 * @return GridFieldOrderableRows $this
+	 */
+	public function setAfterExtraSortFields($fields) {
 		$this->extraSortFields = $fields;
 		return $this;
 	}
@@ -250,6 +276,17 @@ class GridFieldOrderableRows extends RequestHandler implements
 				$sortterm .= $this->getSortTable($list).'.'.$this->getSortField();
 			} else {
 				$sortterm .= '"'.$this->getSortTable($list).'"."'.$this->getSortField().'"';
+			}
+
+			//Add sort filters after the $this->getSortField() otherwise results can be fetch randomly
+			if ($this->extraAfterSortFields) {
+				if (is_array($this->extraAfterSortFields)) {
+					foreach($this->extraAfterSortFields as $col => $dir) {
+						$sortterm .= "$col $dir, ";
+					}
+				} else {
+					$sortterm = $this->extraAfterSortFields.', ';
+				}
 			}
 			return $list->sort($sortterm);
 		} else {
